@@ -1,98 +1,36 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Audio } from "expo-av";
 import Slider from "@react-native-community/slider";
 import { useMusic } from "../context/MusicContext";
 
 const PlayerScreen = ({ route }) => {
   const {
+    songs,
     currentIndex,
     setCurrentIndex,
-    getNextIndex,
-    getPrevIndex,
-    toggleShuffle,
-    isRepeating,
-    toggleRepeat,
+    isPlaying,
+    position,
+    duration,
     isShuffled,
-    songs,
+    isRepeating,
+    togglePlayPause,
+    seekTo,
+    toggleShuffle,
+    toggleRepeat,
+    skipNext,
+    skipPrev,
   } = useMusic();
 
-  const songId = route.params?.songId ?? songs[0].id;
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [position, setPosition] = useState(0);
-  const [duration, setDuration] = useState(1);
-  const soundRef = useRef(null);
-  const isRepeatingRef = useRef(isRepeating);
-
+  const songId = route.params?.songId ?? null;
   const currentSong = songs[currentIndex];
-
-  useEffect(() => {
-    isRepeatingRef.current = isRepeating;
-  }, [isRepeating]);
-
-  useEffect(() => {
-    loadAndPlay(currentIndex); // play the song with the new index
-    return () => unload(); // cleanup on unmount
-  }, [currentIndex]);
 
   // Sync when coming from SongsScreen
   useEffect(() => {
-    const i = songs.findIndex((s) => s.id === songId);
-    if (i !== -1) setCurrentIndex(i); // if index not out of bounds set it
+    if (songId) {
+      const i = songs.findIndex((s) => s.id === songId);
+      if (i !== -1) setCurrentIndex(i);
+    }
   }, [songId]);
-
-  const unload = async () => {
-    if (soundRef.current) {
-      await soundRef.current.unloadAsync(); // release the current sound object from memory completely
-      soundRef.current = null;
-    }
-  };
-
-  const loadAndPlay = async (index) => {
-    await unload(); // always clean up previous sound first
-
-    const { sound } = await Audio.Sound.createAsync(
-      songs[index].file,
-      { shouldPlay: true }, //  starts playing immediately when loaded, unlike new expo-audio lib
-      onPlaybackStatusUpdate, //callback function that gets called every 500ms with the current status
-    );
-
-    soundRef.current = sound; // pass the current sound as a ref to soundRef so we can call operations on it
-    setIsPlaying(true);
-  };
-
-  const onPlaybackStatusUpdate = (status) => {
-    if (!status.isLoaded) return;
-    setPosition(status.positionMillis);
-    setDuration(status.durationMillis ?? 1);
-    setIsPlaying(status.isPlaying);
-    if (status.didJustFinish) {
-      if (isRepeatingRef.current) {
-        // just replay the same sound directly, no index change needed
-        soundRef.current?.replayAsync();
-      } else {
-        setCurrentIndex((prev) => getNextIndexRef.current(prev));
-      }
-    }
-  };
-
-  const togglePlayPause = async () => {
-    if (!soundRef.current) return;
-    if (isPlaying) {
-      await soundRef.current.pauseAsync();
-    } else {
-      await soundRef.current.playAsync();
-    }
-  };
-
-  const skipNext = () => setCurrentIndex((prev) => getNextIndex(prev));
-  const skipPrev = () => setCurrentIndex((prev) => getPrevIndex(prev));
-
-  const onSliderChange = async (value) => {
-    if (soundRef.current) {
-      await soundRef.current.setPositionAsync(value);
-    }
-  };
 
   const formatTime = (ms) => {
     const totalSecs = Math.floor(ms / 1000);
@@ -111,7 +49,7 @@ const PlayerScreen = ({ route }) => {
         minimumValue={0}
         maximumValue={duration}
         value={position}
-        onSlidingComplete={onSliderChange}
+        onSlidingComplete={seekTo}
       />
 
       <View style={styles.timeRow}>
@@ -131,7 +69,6 @@ const PlayerScreen = ({ route }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Shuffle and Repeat */}
       <View style={styles.extraControls}>
         <TouchableOpacity onPress={toggleShuffle}>
           <Text style={[styles.extraBtn, isShuffled && styles.active]}>🔀</Text>
@@ -139,7 +76,6 @@ const PlayerScreen = ({ route }) => {
             {isShuffled ? "Shuffle: On" : "Shuffle: Off"}
           </Text>
         </TouchableOpacity>
-
         <TouchableOpacity onPress={toggleRepeat}>
           <Text style={[styles.extraBtn, isRepeating && styles.active]}>
             🔂
@@ -173,6 +109,7 @@ const styles = StyleSheet.create({
   controls: { flexDirection: "row", gap: 32, marginTop: 32 },
   controlBtn: { fontSize: 36 },
   extraControls: { flexDirection: "row", gap: 32, marginTop: 24 },
-  extraBtn: { fontSize: 28, opacity: 0.4 },
-  active: { opacity: 1 }, // full opacity when active
+  extraBtn: { fontSize: 28, opacity: 0.4, textAlign: "center" },
+  extraLabel: { fontSize: 11, textAlign: "center", opacity: 0.4, marginTop: 4 },
+  active: { opacity: 1 },
 });
