@@ -2,19 +2,33 @@ import { useEffect, useState, useRef } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Audio } from "expo-av";
 import Slider from "@react-native-community/slider";
-import songs from "../constants/songs";
+import { useMusic } from "../context/MusicContext";
 
 const PlayerScreen = ({ route }) => {
+  const {
+    currentIndex,
+    setCurrentIndex,
+    getNextIndex,
+    getPrevIndex,
+    toggleShuffle,
+    isRepeating,
+    toggleRepeat,
+    isShuffled,
+    songs,
+  } = useMusic();
+
   const songId = route.params?.songId ?? songs[0].id;
-  const [currentIndex, setCurrentIndex] = useState(
-    songs.findIndex((s) => s.id === songId) ?? 0,
-  );
   const [isPlaying, setIsPlaying] = useState(false);
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(1);
   const soundRef = useRef(null);
+  const isRepeatingRef = useRef(isRepeating);
 
   const currentSong = songs[currentIndex];
+
+  useEffect(() => {
+    isRepeatingRef.current = isRepeating;
+  }, [isRepeating]);
 
   useEffect(() => {
     loadAndPlay(currentIndex); // play the song with the new index
@@ -48,13 +62,17 @@ const PlayerScreen = ({ route }) => {
   };
 
   const onPlaybackStatusUpdate = (status) => {
-    if (!status.isLoaded) return; // not ready => ignore
+    if (!status.isLoaded) return;
     setPosition(status.positionMillis);
     setDuration(status.durationMillis ?? 1);
     setIsPlaying(status.isPlaying);
     if (status.didJustFinish) {
-      // auto advance to next song
-      setCurrentIndex((prev) => (prev + 1) % songs.length);
+      if (isRepeatingRef.current) {
+        // just replay the same sound directly, no index change needed
+        soundRef.current?.replayAsync();
+      } else {
+        setCurrentIndex((prev) => getNextIndexRef.current(prev));
+      }
     }
   };
 
@@ -67,13 +85,8 @@ const PlayerScreen = ({ route }) => {
     }
   };
 
-  const skipNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % songs.length);
-  };
-
-  const skipPrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + songs.length) % songs.length);
-  };
+  const skipNext = () => setCurrentIndex((prev) => getNextIndex(prev));
+  const skipPrev = () => setCurrentIndex((prev) => getPrevIndex(prev));
 
   const onSliderChange = async (value) => {
     if (soundRef.current) {
@@ -117,6 +130,25 @@ const PlayerScreen = ({ route }) => {
           <Text style={styles.controlBtn}>⏭</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Shuffle and Repeat */}
+      <View style={styles.extraControls}>
+        <TouchableOpacity onPress={toggleShuffle}>
+          <Text style={[styles.extraBtn, isShuffled && styles.active]}>🔀</Text>
+          <Text style={[styles.extraLabel, isShuffled && styles.active]}>
+            {isShuffled ? "Shuffle: On" : "Shuffle: Off"}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={toggleRepeat}>
+          <Text style={[styles.extraBtn, isRepeating && styles.active]}>
+            🔂
+          </Text>
+          <Text style={[styles.extraLabel, isRepeating && styles.active]}>
+            {isRepeating ? "Repeat: On" : "Repeat: Off"}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -140,4 +172,7 @@ const styles = StyleSheet.create({
   },
   controls: { flexDirection: "row", gap: 32, marginTop: 32 },
   controlBtn: { fontSize: 36 },
+  extraControls: { flexDirection: "row", gap: 32, marginTop: 24 },
+  extraBtn: { fontSize: 28, opacity: 0.4 },
+  active: { opacity: 1 }, // full opacity when active
 });

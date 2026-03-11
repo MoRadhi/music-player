@@ -5,9 +5,11 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import songs from "../constants/songs";
+import { useMusic } from "../context/MusicContext";
 
 const SongsScreen = ({ navigation }) => {
+  const { songs } = useMusic();
+
   return (
     <View>
       <FlatList
