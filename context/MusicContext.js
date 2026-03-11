@@ -31,6 +31,13 @@ export const MusicProvider = ({ children }) => {
     return () => unload(); // cleanup on unmount
   }, [currentIndex]);
 
+  useEffect(() => {
+    Audio.setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: true,
+    });
+  }, []);
+
   const unload = async () => {
     if (soundRef.current) {
       await soundRef.current.unloadAsync(); // release the current sound object from memory completely
@@ -107,6 +114,10 @@ export const MusicProvider = ({ children }) => {
   };
 
   const toggleRepeat = () => setIsRepeating((prev) => !prev);
+
+  useEffect(() => {
+    isRepeatingRef.current = isRepeating;
+  }, [isRepeating]);
 
   const getNextIndex = useCallback(
     (current) => {
