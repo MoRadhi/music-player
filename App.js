@@ -26,7 +26,6 @@ function TabNavigator() {
           },
         }}
         screenOptions={({ route }) => ({
-          animation: "fade",
           tabBarIcon: ({ color, size }) => {
             const icons = {
               Songs: "musical-notes",

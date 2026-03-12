@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, Dimensions } from "react-native";
 import Slider from "@react-native-community/slider";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useMusic } from "../context/MusicContext";
@@ -46,7 +47,7 @@ export default function SettingsScreen() {
           {/* Icon + Label */}
           <View style={styles.cardHeader}>
             <LinearGradient colors={currentColor} style={styles.iconBadge}>
-              <Text style={styles.iconEmoji}>🔊</Text>
+              <Ionicons name="volume-high" size={20} color="#FFFFFF" />
             </LinearGradient>
             <View>
               <Text style={styles.cardTitle}>Volume</Text>
@@ -85,7 +86,7 @@ export default function SettingsScreen() {
         >
           <View style={styles.cardHeader}>
             <LinearGradient colors={currentColor} style={styles.iconBadge}>
-              <Text style={styles.iconEmoji}>🎵</Text>
+              <Ionicons name="speedometer" size={20} color="#FFFFFF" />
             </LinearGradient>
             <View>
               <Text style={styles.cardTitle}>Playback Speed</Text>

@@ -10,12 +10,12 @@ import {
   Image,
 } from "react-native";
 import Slider from "@react-native-community/slider";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { useMusic } from "../context/MusicContext";
-import { useTheme } from "../context/ThemeContext";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 const VINYL_SIZE = width * 0.68;
 
 const PlayerScreen = ({ route }) => {
@@ -40,6 +40,9 @@ const PlayerScreen = ({ route }) => {
   const spinValue = useRef(new Animated.Value(0)).current;
   const spinAnimation = useRef(null);
   const currentRotation = useRef(0);
+  const spinDeg = useRef(new Animated.Value(0)).current;
+  const lastDeg = useRef(0);
+
   const glowAnim = useRef(new Animated.Value(0.6)).current;
   const orbAnim = useRef(new Animated.Value(0)).current;
 
@@ -57,9 +60,11 @@ const PlayerScreen = ({ route }) => {
   // Spin vinyl
   useEffect(() => {
     if (isPlaying) {
+      // Always animate from current degree forward
+      const targetDeg = lastDeg.current + 360;
       spinAnimation.current = Animated.loop(
-        Animated.timing(spinValue, {
-          toValue: currentRotation.current + 1,
+        Animated.timing(spinDeg, {
+          toValue: targetDeg,
           duration: 8000,
           easing: Easing.linear,
           useNativeDriver: true,
@@ -84,8 +89,10 @@ const PlayerScreen = ({ route }) => {
       ).start();
     } else {
       spinAnimation.current?.stop();
-      spinValue.stopAnimation((value) => {
-        currentRotation.current = value;
+      // Capture exact degree where it stopped
+      spinDeg.stopAnimation((val) => {
+        lastDeg.current = val % 360;
+        spinDeg.setValue(lastDeg.current);
       });
     }
   }, [isPlaying]);
@@ -106,9 +113,9 @@ const PlayerScreen = ({ route }) => {
     outputRange: ["0deg", "360deg"],
   });
 
-  const spin = spinValue.interpolate({
-    inputRange: [currentRotation.current, currentRotation.current + 1],
-    outputRange: ["0deg", "360deg"],
+  const spin = spinDeg.interpolate({
+    inputRange: [lastDeg.current, lastDeg.current + 360],
+    outputRange: [`${lastDeg.current}deg`, `${lastDeg.current + 360}deg`],
   });
 
   const formatTime = (ms) => {
@@ -219,23 +226,19 @@ const PlayerScreen = ({ route }) => {
           <View style={styles.controls}>
             {/* Shuffle */}
             <TouchableOpacity onPress={toggleShuffle} style={styles.sideBtn}>
-              <Text
-                style={[
-                  styles.sideBtnText,
-                  isShuffled && { color: currentColor[0] },
-                ]}
-              >
-                🔀
-              </Text>
+              <Ionicons
+                name="shuffle"
+                size={20}
+                color={isShuffled ? currentColor[0] : "rgba(255,255,255,0.4)"}
+              />
             </TouchableOpacity>
 
             {/* Prev */}
             <TouchableOpacity onPress={skipPrev} style={styles.skipBtn}>
               <View style={styles.skipBtnInner}>
-                <Text style={styles.skipBtnText}>⏮</Text>
+                <Ionicons name="play-skip-back" size={20} color="#FFFFFF" />
               </View>
             </TouchableOpacity>
-
             {/* Play/Pause */}
             <TouchableOpacity
               onPress={togglePlayPause}
@@ -247,27 +250,29 @@ const PlayerScreen = ({ route }) => {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Text style={styles.playBtnText}>{isPlaying ? "⏸" : "▶️"}</Text>
+                <Ionicons
+                  name={isPlaying ? "pause" : "play"}
+                  size={30}
+                  color="#FFFFFF"
+                  style={{ marginLeft: isPlaying ? 0 : 3 }} // optical centering for play icon
+                />
               </LinearGradient>
             </TouchableOpacity>
 
             {/* Next */}
             <TouchableOpacity onPress={skipNext} style={styles.skipBtn}>
               <View style={styles.skipBtnInner}>
-                <Text style={styles.skipBtnText}>⏭</Text>
+                <Ionicons name="play-skip-forward" size={20} color="#FFFFFF" />
               </View>
             </TouchableOpacity>
 
             {/* Repeat */}
             <TouchableOpacity onPress={toggleRepeat} style={styles.sideBtn}>
-              <Text
-                style={[
-                  styles.sideBtnText,
-                  isRepeating && { color: currentColor[0] },
-                ]}
-              >
-                🔂
-              </Text>
+              <Ionicons
+                name="repeat"
+                size={20}
+                color={isRepeating ? currentColor[0] : "rgba(255,255,255,0.4)"}
+              />
             </TouchableOpacity>
           </View>
         </LinearGradient>
@@ -435,5 +440,4 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.2)",
   },
-  playBtnText: { fontSize: 28 },
 });

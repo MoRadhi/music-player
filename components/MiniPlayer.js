@@ -6,6 +6,7 @@ import {
   Animated,
   Image,
 } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useMusic } from "../context/MusicContext";
@@ -98,12 +99,20 @@ export default function MiniPlayer({ navigation, activeRoute }) {
                   onPress={togglePlayPause}
                   style={styles.controlBtn}
                 >
-                  <Text style={styles.controlText}>
-                    {isPlaying ? "⏸" : "▶️"}
-                  </Text>
+                  <Ionicons
+                    name={isPlaying ? "pause" : "play"}
+                    size={16}
+                    color="#FFFFFF"
+                    style={{ marginLeft: isPlaying ? 0 : 2 }}
+                  />
                 </TouchableOpacity>
+
                 <TouchableOpacity onPress={skipNext} style={styles.controlBtn}>
-                  <Text style={styles.controlText}>⏭</Text>
+                  <Ionicons
+                    name="play-skip-forward"
+                    size={16}
+                    color="#FFFFFF"
+                  />
                 </TouchableOpacity>
               </View>
             </View>
