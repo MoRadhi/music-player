@@ -20,7 +20,6 @@ export const MusicProvider = ({ children }) => {
   const [volume, setVolume] = useState(1.0);
   const [pitch, setPitch] = useState(1.0);
   const [isPlaying, setIsPlaying] = useState(true);
-  const currentColor = songs[currentIndex]?.color ?? ["#8B5CF6", "#4C1D95"];
 
   const soundRef = useRef(null);
   const shuffleOrder = useRef([...Array(songs.length).keys()]);
@@ -173,7 +172,7 @@ export const MusicProvider = ({ children }) => {
         toggleRepeat,
         skipNext,
         skipPrev,
-        currentColor,
+        currentColor: songs[currentIndex]?.color ?? ["#8B5CF6", "#4C1D95"],
       }}
     >
       {children}

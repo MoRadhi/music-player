@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Modal,
   Dimensions,
+  Image,
 } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
@@ -69,9 +70,11 @@ const SongsScreen = ({ navigation }) => {
                 />
 
                 {/* Album art */}
-                <LinearGradient colors={item.color} style={styles.albumArt}>
-                  <Text style={styles.albumArtEmoji}>🎵</Text>
-                </LinearGradient>
+                <Image
+                  source={item.artwork}
+                  style={styles.albumArt}
+                  resizeMode="cover"
+                />
 
                 {/* Song info */}
                 <View style={styles.songInfo}>
@@ -140,12 +143,11 @@ const SongsScreen = ({ navigation }) => {
                   ]}
                 >
                   {/* Album art */}
-                  <LinearGradient
-                    colors={item.color}
-                    style={styles.queueAlbumArt}
-                  >
-                    <Text style={styles.queueAlbumArtEmoji}>🎵</Text>
-                  </LinearGradient>
+                  <Image
+                    source={item.artwork}
+                    style={styles.albumArt}
+                    resizeMode="cover"
+                  />
 
                   {/* Info */}
                   <View style={styles.queueInfo}>
@@ -247,11 +249,10 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   albumArt: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
+    width: 44, // or whatever size it currently is
+    height: 44,
+    borderRadius: 10,
+    overflow: "hidden",
   },
   albumArtEmoji: { fontSize: 24 },
   songInfo: { flex: 1 },

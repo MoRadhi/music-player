@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   Animated,
+  Image,
 } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
@@ -75,12 +76,11 @@ export default function MiniPlayer({ navigation, activeRoute }) {
 
             <View style={styles.content}>
               {/* Album art */}
-              <LinearGradient
-                colors={[currentColor[0], currentColor[1]]}
+              <Image
+                source={currentSong.artwork}
                 style={styles.albumArt}
-              >
-                <Text style={styles.albumArtEmoji}>🎵</Text>
-              </LinearGradient>
+                resizeMode="cover"
+              />
 
               {/* Song info */}
               <View style={styles.info}>
@@ -150,11 +150,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   albumArt: {
-    width: 44,
+    width: 44, // or whatever size it currently is
     height: 44,
     borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
+    overflow: "hidden",
   },
   albumArtEmoji: { fontSize: 22 },
   info: { flex: 1 },

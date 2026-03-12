@@ -39,6 +39,7 @@ const PlayerScreen = ({ route }) => {
 
   const spinValue = useRef(new Animated.Value(0)).current;
   const spinAnimation = useRef(null);
+  const currentRotation = useRef(0);
   const glowAnim = useRef(new Animated.Value(0.6)).current;
   const orbAnim = useRef(new Animated.Value(0)).current;
 
@@ -58,7 +59,7 @@ const PlayerScreen = ({ route }) => {
     if (isPlaying) {
       spinAnimation.current = Animated.loop(
         Animated.timing(spinValue, {
-          toValue: 1,
+          toValue: currentRotation.current + 1,
           duration: 8000,
           easing: Easing.linear,
           useNativeDriver: true,
@@ -83,6 +84,9 @@ const PlayerScreen = ({ route }) => {
       ).start();
     } else {
       spinAnimation.current?.stop();
+      spinValue.stopAnimation((value) => {
+        currentRotation.current = value;
+      });
     }
   }, [isPlaying]);
 
@@ -103,7 +107,7 @@ const PlayerScreen = ({ route }) => {
   });
 
   const spin = spinValue.interpolate({
-    inputRange: [0, 1],
+    inputRange: [currentRotation.current, currentRotation.current + 1],
     outputRange: ["0deg", "360deg"],
   });
 
@@ -113,8 +117,6 @@ const PlayerScreen = ({ route }) => {
     const s = totalSecs % 60;
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
-
-  const progress = duration > 0 ? position / duration : 0;
 
   return (
     <View style={styles.root}>
@@ -172,12 +174,11 @@ const PlayerScreen = ({ route }) => {
           ))}
 
           {/* Album art circle */}
-          <LinearGradient
-            colors={[currentColor[0], currentColor[1]]}
+          <Image
+            source={currentSong.artwork}
             style={styles.albumArt}
-          >
-            <Text style={styles.albumArtEmoji}>🎵</Text>
-          </LinearGradient>
+            resizeMode="cover"
+          />
 
           {/* Center hole */}
           <View style={styles.centerHole} />
@@ -198,28 +199,16 @@ const PlayerScreen = ({ route }) => {
         >
           {/* Progress bar */}
           <View style={styles.progressContainer}>
-            <View style={styles.progressTrack}>
-              <Animated.View
-                style={[
-                  styles.progressFill,
-                  {
-                    width: `${progress * 100}%`,
-                    backgroundColor: currentColor[0],
-                  },
-                ]}
-              />
-              {/* Thumb dot */}
-              <View
-                style={[
-                  styles.progressThumb,
-                  {
-                    left: `${progress * 100}%`,
-                    backgroundColor: "#FFFFFF",
-                    shadowColor: currentColor[0],
-                  },
-                ]}
-              />
-            </View>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={duration}
+              value={position}
+              onSlidingComplete={seekTo}
+              minimumTrackTintColor={currentColor[0]}
+              maximumTrackTintColor="rgba(255,255,255,0.2)"
+              thumbTintColor="#FFFFFF"
+            />
             <View style={styles.timeRow}>
               <Text style={styles.timeText}>{formatTime(position)}</Text>
               <Text style={styles.timeText}>{formatTime(duration)}</Text>
@@ -399,29 +388,7 @@ const styles = StyleSheet.create({
 
   // Progress
   progressContainer: { marginBottom: 24 },
-  progressTrack: {
-    height: 3,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderRadius: 2,
-    marginBottom: 10,
-    position: "relative",
-    justifyContent: "center",
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 2,
-  },
-  progressThumb: {
-    position: "absolute",
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    marginLeft: -7,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 8,
-    elevation: 4,
-  },
+  slider: { width: "100%", height: 40 },
   timeRow: {
     flexDirection: "row",
     justifyContent: "space-between",
