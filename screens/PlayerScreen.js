@@ -40,6 +40,7 @@ const PlayerScreen = ({ route }) => {
   const spinValue = useRef(new Animated.Value(0)).current;
   const spinAnimation = useRef(null);
   const glowAnim = useRef(new Animated.Value(0.6)).current;
+  const orbAnim = useRef(new Animated.Value(0)).current;
 
   const songId = route.params?.songId ?? null;
   const currentSong = songs[currentIndex];
@@ -85,6 +86,22 @@ const PlayerScreen = ({ route }) => {
     }
   }, [isPlaying]);
 
+  // Spin orb when song changes
+  useEffect(() => {
+    orbAnim.setValue(0);
+    Animated.timing(orbAnim, {
+      toValue: 1,
+      duration: 2500,
+      easing: Easing.out(Easing.cubic), // starts fast, slows to stop
+      useNativeDriver: true,
+    }).start();
+  }, [currentIndex]);
+
+  const orbSpin = orbAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
+
   const spin = spinValue.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "360deg"],
@@ -109,16 +126,24 @@ const PlayerScreen = ({ route }) => {
         end={{ x: 0.7, y: 0.8 }}
       />
 
-      {/* Glow orb behind vinyl */}
+      {/* Rotating background orb */}
       <Animated.View
         style={[
           styles.glowOrb,
           {
-            backgroundColor: currentColor[0],
+            backgroundColor: "transparent",
+            transform: [{ rotate: orbSpin }],
             opacity: glowAnim,
           },
         ]}
-      />
+      >
+        <LinearGradient
+          colors={[currentColor[0], currentColor[1], "transparent"]}
+          style={styles.orbGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+      </Animated.View>
 
       {/* Header */}
       <View style={styles.header}>
@@ -274,12 +299,17 @@ const styles = StyleSheet.create({
   },
   glowOrb: {
     position: "absolute",
-    width: width * 0.8,
-    height: width * 0.8,
-    borderRadius: width * 0.4,
-    top: -width * 0.2,
+    width: width * 0.9,
+    height: width * 0.9,
+    borderRadius: width * 0.45,
+    top: -width * 0.25,
     alignSelf: "center",
-    filter: "blur(80px)",
+    overflow: "hidden",
+  },
+  orbGradient: {
+    width: "100%",
+    height: "100%",
+    borderRadius: width * 0.45,
   },
   header: {
     alignItems: "center",

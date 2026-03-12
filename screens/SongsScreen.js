@@ -5,10 +5,14 @@ import {
   TouchableOpacity,
   StyleSheet,
   Modal,
-  Animated,
+  Dimensions,
 } from "react-native";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 import { useMusic } from "../context/MusicContext";
 import { useState } from "react";
+
+const { width } = Dimensions.get("window");
 
 const SongsScreen = ({ navigation }) => {
   const { songs, currentIndex, setCurrentIndex } = useMusic();
@@ -23,27 +27,80 @@ const SongsScreen = ({ navigation }) => {
     navigation.navigate("Player");
   };
 
+  const playSong = (index) => {
+    setCurrentIndex(index);
+    navigation.navigate("Player", { songId: songs[index].id });
+  };
+
   return (
-    <View style={styles.container}>
-      {/* Queue Button */}
-      <TouchableOpacity style={styles.queueBtn} onPress={openQueue}>
-        <Text style={styles.queueBtnText}>🎵 View Queue</Text>
-      </TouchableOpacity>
+    <View style={styles.root}>
+      {/* Background */}
+      <LinearGradient
+        colors={["#1A0A2E", "#0A0A0A"]}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>My Library</Text>
+        <TouchableOpacity onPress={openQueue} style={styles.queueBtn}>
+          <BlurView intensity={40} tint="dark" style={styles.queueBtnBlur}>
+            <Text style={styles.queueBtnText}>Queue ≡</Text>
+          </BlurView>
+        </TouchableOpacity>
+      </View>
 
       {/* Songs List */}
       <FlatList
         data={songs}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
         renderItem={({ item, index }) => (
-          <TouchableOpacity
-            style={styles.songItem}
-            onPress={() => {
-              setCurrentIndex(index);
-              navigation.navigate("Player", { songId: item.id });
-            }}
-          >
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.artist}>{item.artist}</Text>
+          <TouchableOpacity onPress={() => playSong(index)} activeOpacity={0.7}>
+            <BlurView intensity={20} tint="dark" style={styles.songCard}>
+              <LinearGradient
+                colors={["rgba(255,255,255,0.06)", "rgba(255,255,255,0.02)"]}
+                style={styles.songCardInner}
+              >
+                {/* Color accent bar */}
+                <View
+                  style={[styles.accentBar, { backgroundColor: item.color[0] }]}
+                />
+
+                {/* Album art */}
+                <LinearGradient colors={item.color} style={styles.albumArt}>
+                  <Text style={styles.albumArtEmoji}>🎵</Text>
+                </LinearGradient>
+
+                {/* Song info */}
+                <View style={styles.songInfo}>
+                  <Text
+                    style={[
+                      styles.songTitle,
+                      index === currentIndex && { color: item.color[0] },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {item.title}
+                  </Text>
+                  <Text style={styles.songArtist} numberOfLines={1}>
+                    {item.artist}
+                  </Text>
+                </View>
+
+                {/* Now playing indicator */}
+                {index === currentIndex && (
+                  <View style={styles.nowPlaying}>
+                    <Text
+                      style={[styles.nowPlayingText, { color: item.color[0] }]}
+                    >
+                      ▶
+                    </Text>
+                  </View>
+                )}
+              </LinearGradient>
+            </BlurView>
           </TouchableOpacity>
         )}
       />
@@ -51,52 +108,74 @@ const SongsScreen = ({ navigation }) => {
       {/* Queue Modal */}
       <Modal
         visible={queueVisible}
-        transparent={true}
+        transparent
         animationType="slide"
         onRequestClose={closeQueue}
       >
-        {/* Dark overlay — tap to close */}
         <TouchableOpacity
           style={styles.overlay}
           activeOpacity={1}
           onPress={closeQueue}
         />
+        <BlurView intensity={60} tint="dark" style={styles.sheet}>
+          <LinearGradient
+            colors={["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)"]}
+            style={styles.sheetInner}
+          >
+            {/* Handle */}
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Queue</Text>
 
-        {/* Bottom sheet */}
-        <View style={styles.sheet}>
-          <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>Queue</Text>
-
-          <FlatList
-            data={songs}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item, index }) => (
-              <TouchableOpacity
-                style={[
-                  styles.queueItem,
-                  index === currentIndex && styles.queueItemActive,
-                ]}
-                onPress={() => jumpToSong(index)}
-              >
-                {/* Highlight indicator */}
-                {index === currentIndex && (
-                  <Text style={styles.nowPlayingDot}>▶ </Text>
-                )}
-                <View>
-                  <Text
-                    style={[
-                      styles.queueTitle,
-                      index === currentIndex && styles.queueTitleActive,
-                    ]}
+            <FlatList
+              data={songs}
+              keyExtractor={(item) => item.id}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item, index }) => (
+                <TouchableOpacity
+                  onPress={() => jumpToSong(index)}
+                  activeOpacity={0.7}
+                  style={[
+                    styles.queueItem,
+                    index === currentIndex && styles.queueItemActive,
+                  ]}
+                >
+                  {/* Album art */}
+                  <LinearGradient
+                    colors={item.color}
+                    style={styles.queueAlbumArt}
                   >
-                    {item.title}
-                  </Text>
-                  <Text style={styles.queueArtist}>{item.artist}</Text>
-                </View>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
+                    <Text style={styles.queueAlbumArtEmoji}>🎵</Text>
+                  </LinearGradient>
+
+                  {/* Info */}
+                  <View style={styles.queueInfo}>
+                    <Text
+                      style={[
+                        styles.queueTitle,
+                        index === currentIndex && { color: item.color[0] },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {item.title}
+                    </Text>
+                    <Text style={styles.queueArtist} numberOfLines={1}>
+                      {item.artist}
+                    </Text>
+                  </View>
+
+                  {/* Now playing */}
+                  {index === currentIndex && (
+                    <Text
+                      style={[styles.queueNowPlaying, { color: item.color[0] }]}
+                    >
+                      ▶
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              )}
+            />
+          </LinearGradient>
+        </BlurView>
       </Modal>
     </View>
   );
@@ -105,61 +184,167 @@ const SongsScreen = ({ navigation }) => {
 export default SongsScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  root: {
+    flex: 1,
+    backgroundColor: "#0A0A0A",
+    paddingTop: 56,
+  },
+
+  // Header
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    letterSpacing: 0.3,
+  },
+  queueBtn: {
+    borderRadius: 12,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  queueBtnBlur: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  queueBtnText: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 13,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+  },
 
   // Songs list
-  songItem: { padding: 16, borderBottomWidth: 1, borderBottomColor: "#eee" },
-  title: { fontSize: 16, fontWeight: "bold" },
-  artist: { fontSize: 14, color: "#666" },
+  list: {
+    paddingHorizontal: 16,
+    paddingBottom: 160,
+    gap: 10,
+  },
 
-  // Queue button
-  queueBtn: {
+  // Song card
+  songCard: {
+    borderRadius: 16,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  songCardInner: {
+    flexDirection: "row",
+    alignItems: "center",
     padding: 12,
-    marginBottom: 12,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 8,
+    gap: 12,
+  },
+  accentBar: {
+    width: 3,
+    height: 40,
+    borderRadius: 2,
+  },
+  albumArt: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  albumArtEmoji: { fontSize: 24 },
+  songInfo: { flex: 1 },
+  songTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    letterSpacing: 0.2,
+  },
+  songArtist: {
+    fontSize: 13,
+    color: "rgba(255,255,255,0.45)",
+    marginTop: 3,
+  },
+  nowPlaying: {
+    width: 28,
     alignItems: "center",
   },
-  queueBtnText: { fontSize: 16, fontWeight: "600" },
-
-  // Modal overlay
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+  nowPlayingText: {
+    fontSize: 14,
+    fontWeight: "bold",
   },
 
-  // Bottom sheet
+  // Modal
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
   sheet: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 16,
-    maxHeight: "60%",
+    maxHeight: "65%",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  sheetInner: {
+    padding: 20,
+    paddingBottom: 40,
   },
   sheetHandle: {
-    width: 40,
+    width: 36,
     height: 4,
-    backgroundColor: "#ccc",
+    backgroundColor: "rgba(255,255,255,0.2)",
     borderRadius: 2,
     alignSelf: "center",
-    marginBottom: 12,
+    marginBottom: 16,
   },
-  sheetTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 12 },
+  sheetTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    marginBottom: 16,
+    letterSpacing: 0.3,
+  },
 
   // Queue items
   queueItem: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
-    borderRadius: 8,
+    padding: 10,
+    borderRadius: 12,
+    gap: 12,
+    marginBottom: 4,
   },
-  queueItemActive: { backgroundColor: "#f0f0f0" },
-  nowPlayingDot: { color: "#1DB954", fontWeight: "bold" },
-  queueTitle: { fontSize: 15, fontWeight: "500" },
-  queueTitleActive: { color: "#1DB954", fontWeight: "bold" },
-  queueArtist: { fontSize: 13, color: "#666" },
+  queueItemActive: {
+    backgroundColor: "rgba(255,255,255,0.06)",
+  },
+  queueAlbumArt: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  queueAlbumArtEmoji: { fontSize: 20 },
+  queueInfo: { flex: 1 },
+  queueTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  queueArtist: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.45)",
+    marginTop: 2,
+  },
+  queueNowPlaying: {
+    fontSize: 14,
+    fontWeight: "bold",
+  },
 });
