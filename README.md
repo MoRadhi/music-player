@@ -8,6 +8,10 @@ A fully-featured mobile music player built with **React Native** and **Expo SDK 
 
 > Player Screen · Songs Library · Equalizer
 
+![Songs-Library](image.png)
+![Player-Screen](image-1.png)
+![Equalizer-Screen](image-2.png)
+
 ---
 
 ## ✨ Features
