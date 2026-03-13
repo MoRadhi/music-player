@@ -177,7 +177,7 @@ const songs = [
   },
   {
     id: "23",
-    title: "LEveL",
+    title: "LeveL",
     artist: "Hiroyuki Sawano & TOMORROWxTOGETHER",
     file: require("../assets/songs/Solo Leveling Opening LEVEL by Hiroyuki Sawano nZk and TOMORROW X TOGETHER.mp3"),
     artwork: require("../assets/artwork/solo_leveling_level.jpg"),

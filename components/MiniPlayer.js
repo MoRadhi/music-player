@@ -11,6 +11,7 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useMusic } from "../context/MusicContext";
 import { useEffect, useRef } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function MiniPlayer({ navigation, activeRoute }) {
   const {
@@ -27,6 +28,7 @@ export default function MiniPlayer({ navigation, activeRoute }) {
   const currentSong = songs[currentIndex];
   const progress = duration > 0 ? position / duration : 0;
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
 
   // Fade in on mount
   useEffect(() => {
@@ -55,7 +57,12 @@ export default function MiniPlayer({ navigation, activeRoute }) {
   };
 
   return (
-    <Animated.View style={[styles.wrapper, { opacity: fadeAnim }]}>
+    <Animated.View
+      style={[
+        styles.wrapper,
+        { opacity: fadeAnim, bottom: insets.bottom + 51 },
+      ]}
+    >
       <TouchableOpacity activeOpacity={0.9} onPress={handlePress}>
         <BlurView intensity={60} tint="dark" style={styles.blur}>
           <LinearGradient
@@ -126,11 +133,9 @@ export default function MiniPlayer({ navigation, activeRoute }) {
 const styles = StyleSheet.create({
   wrapper: {
     position: "absolute",
-    bottom: 0,
     left: 0,
     right: 0,
     marginHorizontal: 12,
-    marginBottom: 90,
     borderRadius: 18,
     overflow: "hidden",
     borderWidth: 1,

@@ -37,9 +37,7 @@ const PlayerScreen = ({ route }) => {
     currentColor,
   } = useMusic();
 
-  const spinValue = useRef(new Animated.Value(0)).current;
   const spinAnimation = useRef(null);
-  const currentRotation = useRef(0);
   const spinDeg = useRef(new Animated.Value(0)).current;
   const lastDeg = useRef(0);
 

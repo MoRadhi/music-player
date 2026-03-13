@@ -9,6 +9,7 @@ import PlayerScreen from "./screens/PlayerScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import MiniPlayer from "./components/MiniPlayer";
 import { useState } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 const Tab = createBottomTabNavigator();
 
@@ -58,12 +59,14 @@ function TabNavigator() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <MusicProvider>
-        <NavigationContainer>
-          <TabNavigator />
-        </NavigationContainer>
-      </MusicProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <MusicProvider>
+          <NavigationContainer>
+            <TabNavigator />
+          </NavigationContainer>
+        </MusicProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

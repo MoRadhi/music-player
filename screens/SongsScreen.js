@@ -5,15 +5,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   Modal,
-  Dimensions,
   Image,
 } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useMusic } from "../context/MusicContext";
 import { useState } from "react";
-
-const { width } = Dimensions.get("window");
 
 const SongsScreen = ({ navigation }) => {
   const { songs, currentIndex, setCurrentIndex } = useMusic();

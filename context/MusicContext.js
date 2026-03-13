@@ -26,6 +26,16 @@ export const MusicProvider = ({ children }) => {
   const isRepeatingRef = useRef(false);
   const getNextIndexRef = useRef(null);
 
+  const loadingRef = useRef(false);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   useEffect(() => {
     loadAndPlay(currentIndex); // play the song with the new index
     return () => unload(); // cleanup on unmount
@@ -61,15 +71,29 @@ export const MusicProvider = ({ children }) => {
   };
 
   const loadAndPlay = async (index) => {
-    await unload(); // always clean up previous sound first
+    // Cancel any in-progress load
+    loadingRef.current = false;
+    const thisLoad = {};
+    loadingRef.current = thisLoad;
+
+    await unload();
+
+    // If another load started after this one, bail out
+    if (loadingRef.current !== thisLoad) return;
 
     const { sound } = await Audio.Sound.createAsync(
       songs[index].file,
-      { shouldPlay: true }, //  starts playing immediately when loaded, unlike new expo-audio lib
-      onPlaybackStatusUpdate, //callback function that gets called every 500ms with the current status
+      { shouldPlay: true },
+      onPlaybackStatusUpdate,
     );
 
-    soundRef.current = sound; // pass the current sound as a ref to soundRef so we can call operations on it
+    // Check again after the async createAsync resolves
+    if (loadingRef.current !== thisLoad) {
+      await sound.unloadAsync(); // kill this ghost sound
+      return;
+    }
+
+    soundRef.current = sound;
     setIsPlaying(true);
   };
 
